@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { profile } from '../data/portfolioData.js';
 
 const initialForm = { name: '', email: '', subject: '', message: '' };
@@ -7,6 +7,7 @@ export default function Contact() {
   const [form, setForm] = useState(initialForm);
   const [status, setStatus] = useState(null); // { type: 'ok' | 'err', text: string }
   const [submitting, setSubmitting] = useState(false);
+  const abortControllerRef = useRef(null);
 
   const update = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
 
@@ -17,13 +18,25 @@ export default function Contact() {
       return;
     }
 
+    // Prevent double submission
+    if (submitting) return;
+
     setSubmitting(true);
     setStatus(null);
+    
+    // Cancel previous request if still pending
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    
+    abortControllerRef.current = new AbortController();
+
     try {
       const res = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
+        signal: abortControllerRef.current.signal,
       });
       const data = await res.json();
 
@@ -34,10 +47,12 @@ export default function Contact() {
         setStatus({ type: 'err', text: data.error || 'Something went wrong. Please try again.' });
       }
     } catch (err) {
-      setStatus({
-        type: 'err',
-        text: 'Could not reach the server. Is the backend running on port 5000?',
-      });
+      if (err.name !== 'AbortError') {
+        setStatus({
+          type: 'err',
+          text: 'Could not reach the server. Is the backend running on port 5000?',
+        });
+      }
     } finally {
       setSubmitting(false);
     }

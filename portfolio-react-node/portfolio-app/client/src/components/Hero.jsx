@@ -1,13 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { profile } from '../data/portfolioData.js';
 
 export default function Hero() {
   const [typed, setTyped] = useState('');
+  const isMountedRef = useRef(true);
 
   useEffect(() => {
+    isMountedRef.current = true;
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (reduced) {
-      setTyped(profile.roles[0]);
+      if (isMountedRef.current) setTyped(profile.roles[0]);
       return;
     }
 
@@ -17,6 +19,8 @@ export default function Hero() {
     let timeoutId;
 
     const tick = () => {
+      if (!isMountedRef.current) return;
+      
       const word = profile.roles[roleIndex];
       if (!deleting) {
         charIndex++;
@@ -38,7 +42,10 @@ export default function Hero() {
     };
 
     tick();
-    return () => clearTimeout(timeoutId);
+    return () => {
+      isMountedRef.current = false;
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   return (

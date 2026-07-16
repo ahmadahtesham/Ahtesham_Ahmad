@@ -12,6 +12,18 @@ const allowedOrigins = (process.env.CLIENT_ORIGIN || 'http://localhost:5173').sp
 app.use(cors({ origin: allowedOrigins }));
 app.use(express.json());
 
+// Initialize email transporter once at startup
+let transporter = null;
+if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+  transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
+}
+
 // Simple health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', time: new Date().toISOString() });
@@ -44,7 +56,7 @@ app.post('/api/contact', async (req, res) => {
   }
 
   // Dev fallback: if email credentials aren't configured yet, just log the submission
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+  if (!transporter) {
     console.log('--- New contact form submission (email not configured — logging only) ---');
     console.log({ name, email, subject, message, receivedAt: new Date().toISOString() });
     return res.json({
@@ -54,14 +66,6 @@ app.post('/api/contact', async (req, res) => {
   }
 
   try {
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
     await transporter.sendMail({
       from: `"Portfolio Contact Form" <${process.env.EMAIL_USER}>`,
       replyTo: email,
