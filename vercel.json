@@ -1,0 +1,20 @@
+{
+  "version": 2,
+  "buildCommand": "npm run build --prefix=portfolio-react-node/portfolio-app/client",
+  "outputDirectory": "portfolio-react-node/portfolio-app/client/dist",
+  "env": {
+    "EMAIL_USER": "@email_user",
+    "EMAIL_PASS": "@email_pass",
+    "TO_EMAIL": "@to_email"
+  },
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

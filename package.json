@@ -1,0 +1,13 @@
+{
+  "name": "ahtesham-ahmad-portfolio",
+  "version": "1.0.0",
+  "description": "Portfolio site with serverless backend on Vercel",
+  "type": "module",
+  "scripts": {
+    "build": "npm run build --prefix=portfolio-react-node/portfolio-app/client"
+  },
+  "dependencies": {
+    "nodemailer": "^6.9.14",
+    "dotenv": "^16.4.5"
+  }
+}
